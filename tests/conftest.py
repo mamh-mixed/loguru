@@ -45,6 +45,20 @@ if sys.version_info < (3, 6):
         yield pathlib.Path(str(tmp_path))
 
 
+if sys.version_info >= (3, 6):
+
+    warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        message="The pytest_cmdline_preparse hook is deprecated",
+    )
+
+    # https://github.com/pytest-dev/pytest/issues/9619
+    def pytest_cmdline_preparse(config, args):
+        dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        args[:] = ["--mypy-ini-file", os.path.join(dirname, "tox.ini")] + args
+
+
 def parse(text, *, strip=False, strict=True):
     parser = loguru._colorizer.AnsiParser()
     parser.feed(text)
@@ -79,7 +93,7 @@ def default_threading_excepthook():
         return
 
     # Pytest added "PytestUnhandledThreadExceptionWarning", we need to
-    # remove it temporarily for somes tests checking exceptions in threads.
+    # remove it temporarily for some tests checking exceptions in threads.
 
     def excepthook(args):
         print("Exception in thread:", file=sys.stderr, flush=True)
